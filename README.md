@@ -1,4 +1,4 @@
-[READ ONLY]Widgets module for [Rock Framework](https://github.com/romeOz/rock)
+[READ ONLY] Widgets module for [Rock Framework](https://github.com/romeOz/rock)
 =================
 
 [![Build Status](https://travis-ci.org/romeOz/rock-widgets.svg?branch=master)](https://travis-ci.org/romeOz/rock-widgets)
