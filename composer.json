@@ -1,0 +1,55 @@
+{
+    "name": "romeoz/rock-widgets",
+    "description": "[READ ONLY] Widgets module for Rock Framework",
+    "keywords": ["widgets"],
+    "type": "library",
+    "license": "MIT",
+    "support": {
+        "email": "serggalka@gmail.com",
+        "issues": "https://github.com/romeOz/rock-widgets/issues",
+        "source": "https://github.com/romeOz/rock-widgets"
+    },
+    "authors": [
+        {
+            "name": "Ruslan",
+            "email": "serggalka@gmail.com"
+        }
+    ],
+    "repositories": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/romeOz/rock-base"
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/romeOz/rock-components"
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/romeOz/rock-execute"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0",
+        "romeoz/rock-base" : "*@dev",
+        "romeoz/rock-helpers" : "*@dev",
+        "romeoz/rock-components" : "*@dev",
+        "romeoz/rock-template" : "*@dev",
+        "romeoz/rock-url" : "*@dev"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "4.4.*",
+        "romeoz/rock-request" : "*@dev",
+        "romeoz/rock-execute" : "*@dev"
+    },
+    "autoload": {
+        "psr-4": {
+            "rock\\widgets\\": "src/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0.x-dev"
+        }
+    }
+}
