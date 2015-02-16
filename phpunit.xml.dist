@@ -24,6 +24,7 @@
     <filter>
         <blacklist>
             <file>./src/WidgetException.php</file>
+            <directory>./tests/</directory>
         </blacklist>
     </filter>
     <logging>
