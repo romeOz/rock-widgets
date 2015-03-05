@@ -1,6 +1,6 @@
 {
     "name": "romeoz/rock-widgets",
-    "description": "[READ ONLY] Widgets module for Rock Framework",
+    "description": "Widgets module for Rock Framework",
     "keywords": ["widgets"],
     "type": "library",
     "license": "MIT",
@@ -17,15 +17,14 @@
     ],
     "require": {
         "php": ">=5.4.0",
-        "romeoz/rock-helpers" : "0.10.*",
         "romeoz/rock-components" : "0.10.*",
-        "romeoz/rock-template" : "*@dev",
+        "romeoz/rock-template" : "0.10.*",
         "romeoz/rock-url" : "0.10.*"
     },
     "require-dev": {
         "phpunit/phpunit": "4.4.*",
         "romeoz/rock-request" : "0.10.*",
-        "romeoz/rock-execute" : "*@dev"
+        "romeoz/rock-execute" : "0.10.*"
     },
     "autoload": {
         "psr-4": {
@@ -34,7 +33,7 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-master": "0.9-dev"
+            "dev-master": "0.10-dev"
         }
     }
 }
