@@ -4,13 +4,12 @@ namespace rock\widgets;
 
 
 use rock\components\Model;
-use rock\db\ActiveRecordInterface;
+use rock\db\common\ActiveRecordInterface;
 use rock\template\Html;
 use rock\template\HtmlException;
 
 class ActiveHtml extends Html
 {
-
     /**
      * Generates a label tag for the given model attribute.
      *
@@ -480,7 +479,7 @@ class ActiveHtml extends Html
      * For an attribute expression like `[0]dates[0]`, this method will return the value of `$model->dates[0]`.
      * See {@see \rock\widgets\ActiveHtml::getAttributeName()} for more details about attribute expression.
      *
-     * If an attribute value is an instance of {@see \rock\db\ActiveRecordInterface} or an array of such instances,
+     * If an attribute value is an instance of {@see \rock\db\common\ActiveRecordInterface} or an array of such instances,
      * the primary value(s) of the AR instance(s) will be returned instead.
      *
      * @param \rock\components\Model  $model     the model object
