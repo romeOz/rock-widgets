@@ -1,7 +1,7 @@
 {
     "name": "romeoz/rock-widgets",
     "description": "Widgets module for Rock Framework",
-    "keywords": ["widgets"],
+    "keywords": ["widgets", "template engine"],
     "type": "library",
     "license": "MIT",
     "support": {
