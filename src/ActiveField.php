@@ -121,14 +121,14 @@ class ActiveField implements ObjectInterface
      * Note that in order to enable query caching, a valid cache component as specified
      * by `cacheClass` must be enabled and `enableCache` must be set true.
      *
-     * Methods @see beginCache
-     * and @see endCache can be used as shortcuts to turn on
+     * Methods @see cache
+     * and @see notCache can be used as shortcuts to turn on
      * and off query caching on the fly.
      * @see cacheExpire
      * @see cacheClass
      * @see cacheTags
-     * @see beginCache()
-     * @see endCache()
+     * @see cache()
+     * @see notCache()
      */
     public $enableCache = false;
     /**
@@ -902,7 +902,7 @@ class ActiveField implements ObjectInterface
      *                       If not set, it will use the value of `cacheExpire`. See `cacheExpire` for more details.
      * @return $this
      */
-    public function beginCache($expire = 0, array $tags = null)
+    public function cache($expire = null, array $tags = null)
     {
         $this->enableCache = true;
         if ($expire !== null) {
@@ -916,7 +916,7 @@ class ActiveField implements ObjectInterface
     /**
      * Turns off query caching.
      */
-    public function endCache()
+    public function notCache()
     {
         $this->enableCache = false;
 
