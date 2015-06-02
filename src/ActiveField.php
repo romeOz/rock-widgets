@@ -226,7 +226,7 @@ class ActiveField implements ObjectInterface
             $this->parts['{error}'] = $this->renderErrors();
         }
         if (!isset($this->parts['{hint}'])) {
-            $this->parts['{hint}'] = '';
+            $this->parts['{hint}'] = ActiveHtml::activeHint($this->model, $this->attribute, $this->hintOptions);
         }
         return strtr($this->template, $this->parts);
     }
