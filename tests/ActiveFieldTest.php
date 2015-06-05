@@ -82,7 +82,7 @@ EOD;
         $model = $this->helperModel;
         $model->rules = [
             [
-                $model::RULE_VALIDATE, $this->attributeName, 'required'
+                $this->attributeName, 'required'
             ],
         ];
 
@@ -98,7 +98,7 @@ EOD;
         $model->addError($this->attributeName, "Error Message");
         $model->rules = [
             [
-                $model::RULE_VALIDATE, $this->attributeName, 'required'
+                $this->attributeName, 'required'
             ],
         ];
 
