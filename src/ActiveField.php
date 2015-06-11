@@ -259,9 +259,10 @@ class ActiveField implements ObjectInterface
             return $options;
         }
         foreach ($this->model->rules() as $rule) {
-            list($type, $attributes) = $rule;
-            if ($type === Model::RULE_VALIDATE && in_array($this->attribute, (array)$attributes, true)) {
-                $rule = array_slice($rule, 2);
+            list($attributes) = $rule;
+            if (in_array($this->attribute, (array)$attributes, true)) {
+                $rule = array_slice($rule, 1);
+
                 foreach ($rule as $ruleName => $args) {
                     if (is_int($ruleName)) {
                         $ruleName = $args;
@@ -719,7 +720,7 @@ class ActiveField implements ObjectInterface
 
     /**
      * Renders a list box.
-     * 
+     *
      * The selection of the list box is taken from the value of the model attribute.
      *
      * @param array $items   the option data items. The array keys are option values, and the array values
@@ -772,7 +773,7 @@ class ActiveField implements ObjectInterface
 
     /**
      * Renders a list of checkboxes.
-     * 
+     *
      * A checkbox list allows multiple selection, like {@see \rock\widgets\ActiveField::listBox()} .
      * As a result, the corresponding submitted value is an array.
      * The selection of the checkbox list is taken from the value of the model attribute.
