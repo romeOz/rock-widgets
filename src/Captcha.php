@@ -5,6 +5,7 @@ namespace rock\widgets;
 
 use rock\captcha\CaptchaInterface;
 use rock\di\Container;
+use rock\helpers\Instance;
 use rock\template\Html;
 use rock\url\Url;
 
@@ -45,10 +46,7 @@ class Captcha extends InputWidget implements CaptchaInterface
     public function init()
     {
         parent::init();
-        if (!is_object($this->captcha)) {
-            $this->captcha = Container::load($this->captcha);
-        }
-
+        $this->captcha = Instance::ensure($this->captcha);
         $this->checkRequirements();
         if (!isset($this->imageOptions['id'])) {
             $this->imageOptions['id'] = $this->options['id'] . '-image';
@@ -81,13 +79,7 @@ class Captcha extends InputWidget implements CaptchaInterface
             $src,
             $this->imageOptions
         );
-        echo strtr(
-            $this->template,
-            [
-              '{input}' => $input,
-              '{image}' => $image,
-            ]
-        );
+        echo strtr($this->template, ['{input}' => $input, '{image}' => $image,]);
     }
 
     /**
@@ -115,4 +107,4 @@ class Captcha extends InputWidget implements CaptchaInterface
         }
         throw new WidgetException('GD with FreeType or ImageMagick PHP extensions are required.');
     }
-} 
+}
