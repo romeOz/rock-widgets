@@ -4,7 +4,7 @@ namespace rock\widgets;
 
 
 use rock\captcha\CaptchaInterface;
-use rock\di\Container;
+
 use rock\helpers\Instance;
 use rock\template\Html;
 use rock\url\Url;
@@ -51,9 +51,6 @@ class Captcha extends InputWidget implements CaptchaInterface
         if (!isset($this->imageOptions['id'])) {
             $this->imageOptions['id'] = $this->options['id'] . '-image';
         }
-        if (!isset($this->imageOptions['data-ng-click'])) {
-            $this->imageOptions['data-ng-click'] = 'reloadCaptcha("/ajax/captcha/", $event)';
-        }
     }
 
     /**
@@ -79,7 +76,13 @@ class Captcha extends InputWidget implements CaptchaInterface
             $src,
             $this->imageOptions
         );
-        echo strtr($this->template, ['{input}' => $input, '{image}' => $image,]);
+        echo strtr(
+            $this->template,
+            [
+                '{input}' => $input,
+                '{image}' => $image,
+            ]
+        );
     }
 
     /**
@@ -107,4 +110,4 @@ class Captcha extends InputWidget implements CaptchaInterface
         }
         throw new WidgetException('GD with FreeType or ImageMagick PHP extensions are required.');
     }
-}
+} 
