@@ -72,7 +72,7 @@ class ActiveField implements ObjectInterface
      *
      * @see \rock\helpers\Html::renderTagAttributes() for details on how attributes are being rendered.
      */
-    public $ngErrorOptions = ['class' => 'form-error hide'];
+    public $ngErrorOptions = ['class' => 'form-error ng-hide'];
     public $ngErrorMessages = [];
     /**
      * @var array the default options for the label tags. The parameter passed to `label()` will be
@@ -301,22 +301,21 @@ class ActiveField implements ObjectInterface
     protected function renderErrors()
     {
         $result = '';
+        $tag = isset($this->ngErrorOptions['tag']) ? $this->ngErrorOptions['tag'] : 'div';
+        unset($this->ngErrorOptions['tag']);
+        $formName = isset($this->formName) ? $this->formName . '[' . $this->attribute . ']' : $this->attribute;
         if ($this->ngErrorMessages) {
             if (is_array($this->ngErrorMessages)) {
                 $this->ngErrorMessages = Json::encode($this->ngErrorMessages);
             }
             $this->ngErrorOptions['data-ng-repeat'] = '(error, errorMsg) in ' . $this->ngErrorMessages;
-            $this->ngErrorOptions['data-ng-class'] = isset($this->formName)
-                ? 'showError("' . $this->formName . '[' . $this->attribute . ']", error)'
-                : 'showError("' . $this->attribute . '", error)';
+            $this->ngErrorOptions['data-ng-show'] = 'showError("' . $formName . '", error)';
             $this->ngErrorOptions['data-ng-bind'] = 'errorMsg';
-            $tag = isset($this->ngErrorOptions['tag']) ? $this->ngErrorOptions['tag'] : 'div';
-            unset($this->ngErrorOptions['tag']);
             $result .= Html::tag($tag, '', $this->ngErrorOptions) . "\n";
         }
-        $this->errorOptions['data-ng-class'] = isset($this->formName)
-            ? 'hideError("' . $this->formName . '[' . $this->attribute . ']", error)'
-            : 'hideError("' . $this->attribute . '", error)';
+
+        $result .= Html::tag($tag, '', ['class' => $this->ngErrorOptions['class'], 'data-ng-show' => "!!bindError(\"{$this->attribute}\") && pristine(\"{$formName}\")", 'data-ng-bind' => "bindError(\"{$this->attribute}\")"]) . "\n";
+        $this->errorOptions['data-ng-show'] = 'hideError("' . $formName . '", error)';
         $result .= ActiveHtml::error($this->model, $this->attribute, $this->errorOptions);
 
         return $result;

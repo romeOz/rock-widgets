@@ -161,8 +161,6 @@ class ActiveForm extends Widget
             $options['hiddenCsrf'] = array_merge(
                 [
                     'data-ng-model' => (isset($this->modelName) ? $this->modelName : 'form') . ".values.{$this->csrf->csrfParam}",
-                    'data-simple-name' => $this->csrf->csrfParam,
-                    'data-rock-form-add-csrf' => '',
                     'data-ng-value' => 'rock.csrf.getToken()'
 
                 ],
@@ -181,7 +179,7 @@ class ActiveForm extends Widget
         if (!empty($this->_fields)) {
             throw new WidgetException('Each beginField() should have a matching endField() call.');
         }
-        
+
         echo Html::endForm();
     }
 
@@ -206,7 +204,7 @@ class ActiveForm extends Widget
         if (!isset($config['class'])) {
             $config['class'] = $this->fieldClass;
         }
-        
+
         return Instance::ensure(ArrayHelper::merge($config, $options, [
             'model' => $model,
             'attribute' => $attribute,
@@ -219,7 +217,7 @@ class ActiveForm extends Widget
      * This method will create a new form field and returns its opening tag.
      * You should call {@see \rock\widgets\ActiveForm::endField()} afterwards.
      *
-*@param \rock\components\Model $model the data model
+     * @param \rock\components\Model $model the data model
      * @param string $attribute the attribute name or expression. See {@see \rock\widgets\ActiveHtml::getAttributeName()} for the format
      * about attribute expression.
      * @param array $options the additional configurations for the field object
