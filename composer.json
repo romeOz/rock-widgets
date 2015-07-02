@@ -16,13 +16,13 @@
         }
     ],
     "require": {
-      "php": ">=5.4.0",
-      "romeoz/rock-template" : "0.11.*"
+        "php": ">=5.4.0",
+        "romeoz/rock-template" : "*@dev"
     },
     "require-dev": {
-      "phpunit/phpunit": "4.7.*",
-      "romeoz/rock-components" : "0.11.*",
-      "romeoz/rock-url" : "0.10.*"
+        "phpunit/phpunit": "4.7.*",
+        "romeoz/rock-components" : "*@dev",
+        "romeoz/rock-url" : "*@dev"
     },
     "autoload": {
         "psr-4": {
