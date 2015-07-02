@@ -175,7 +175,7 @@ class ActiveHtml extends Html
         // add a hidden field so that if a model only has a file field, we can
         // still use isset($_POST[$modelClass]) to detect if the input is submitted
         return static::activeHiddenInput($model, $attribute, ['id' => null, 'value' => ''])
-               . static::activeInput('file', $model, $attribute, $options);
+        . static::activeInput('file', $model, $attribute, $options);
     }
 
     /**
@@ -659,5 +659,16 @@ class ActiveHtml extends Html
         } else {
             throw new HtmlException('Attribute name must contain word characters only.');
         }
+    }
+
+    /**
+     * @inheritdoc
+     */
+    protected static function normalizeClientOptions($option, $value)
+    {
+        if ($option === 'ng-init' && is_array($value)) {
+            return Html::fromArray($value);
+        }
+        return $value;
     }
 }

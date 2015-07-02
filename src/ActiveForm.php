@@ -2,12 +2,12 @@
 
 namespace rock\widgets;
 
+use rock\base\Alias;
 use rock\components\Model;
 use rock\csrf\CSRF;
 use rock\helpers\ArrayHelper;
 use rock\helpers\Instance;
 use rock\request\Request;
-use rock\template\Html;
 
 class ActiveForm extends Widget
 {
@@ -27,7 +27,7 @@ class ActiveForm extends Widget
      * ```php
      * $form = ActiveForm::begin([
      *     'method' => 'get',
-     *     'action' => ['controller/action'],
+     *     'action' => '@link.home/signup/',
      * ]);
      * ```
      */
@@ -76,11 +76,7 @@ class ActiveForm extends Widget
      * {@see \rock\url\Url::getAbsoluteUrl()}. Please refer to {@see \rock\url\Url::getAbsoluteUrl()} for more details on how to configure this property.
      * If this property is not set, it will take the value of the form's action attribute.
      */
-    public $validationUrl;
-    /**
-     * @var boolean whether to perform validation when the form is submitted.
-     */
-    public $validateOnSubmit = true;
+    public $clientAction;
     /**
      * @var boolean whether to perform validation when an input field loses focus and its value is found changed.
      * If {@see \rock\widgets\ActiveField::validateOnChanged} is set, its value will take precedence for that input field.
@@ -115,6 +111,9 @@ class ActiveForm extends Widget
     {
         $this->csrf = Instance::ensure($this->csrf, '\rock\csrf\CSRF', false);
         $this->request = Instance::ensure($this->request, '\rock\request\Request');
+        if (!empty($this->clientAction)) {
+            $this->clientAction = Alias::getAlias($this->clientAction);
+        }
 
         if (!isset($this->options['id'])) {
             $this->options['id'] = $this->getId();
@@ -127,47 +126,7 @@ class ActiveForm extends Widget
         $this->modelName = $this->model->formName();
         $this->options = $this->clientOptions($this->options);
 
-        echo Html::beginForm($this->action, $this->method, $this->modelName, $this->options);
-    }
-
-    protected function clientOptions(array $options)
-    {
-        if (!$this->enableClientValidation) {
-            return $options;
-        }
-
-        if (!empty($this->modelName)) {
-            $options['name'] = $this->modelName;
-            if (!isset($options['data-ng-init'])) {
-                $options['data-ng-init'] = 'formName="' . $this->modelName . '";';
-                if ($this->validateOnChanged) {
-                    $options['data-ng-init'] .= 'validateOnChanged=true;';
-                }
-            }
-        }
-        if (!isset($options['data-ng-submit'])) {
-            $options['data-ng-submit'] = 'submit($event)';
-        }
-
-        $options['hiddenMethod'] = array_merge(
-            [
-                'data-ng-model' =>  (isset($this->modelName) ? $this->modelName : 'form').".values.{$this->request->methodVar}",
-                'data-simple-name' => $this->request->methodVar
-            ],
-            ArrayHelper::getValue($options, 'hiddenMethod', [])
-        );
-
-        if ($this->csrf instanceof \rock\csrf\CSRF) {
-            $options['hiddenCsrf'] = array_merge(
-                [
-                    'data-ng-model' => (isset($this->modelName) ? $this->modelName : 'form') . ".values.{$this->csrf->csrfParam}",
-                    'data-ng-value' => 'rock.csrf.getToken()'
-
-                ],
-                ArrayHelper::getValue($options, 'hiddenCsrf', [])
-            );
-        }
-        return $options;
+        echo ActiveHtml::beginForm($this->action, $this->method, $this->modelName, $this->options);
     }
 
     /**
@@ -180,7 +139,7 @@ class ActiveForm extends Widget
             throw new WidgetException('Each beginField() should have a matching endField() call.');
         }
 
-        echo Html::endForm();
+        echo ActiveHtml::endForm();
     }
 
     /**
@@ -337,5 +296,48 @@ class ActiveForm extends Widget
         }
 
         return $result;
+    }
+
+    protected function clientOptions(array $options)
+    {
+        if (!$this->enableClientValidation) {
+            return $options;
+        }
+        if (!isset($options['data']['ng-init'])) {
+            $options['data']['ng-init'] = [];
+        }
+        if (isset($options['data']['ng-init']) && !is_array($options['data']['ng-init'])) {
+            throw new WidgetException(WidgetException::NOT_ARRAY, ['name' => 'param "ng-init"']);
+        }
+
+        if (!empty($this->modelName)) {
+            $options['name'] = $this->modelName;
+
+            if (!isset($options['data']['ng-init']['formName'])) {
+                $options['data']['ng-init']['formName'] = $this->modelName;
+            }
+        }
+
+        if ($this->validateOnChanged) {
+            $options['data']['ng-init']['validateOnChanged'] = true;
+        }
+
+        if ($this->csrf instanceof \rock\csrf\CSRF) {
+            if (!isset($options['hiddenCsrf']['data'])) {
+                $options['hiddenCsrf']['data'] = [];
+            }
+
+            if (!isset($options['hiddenCsrf']['data']['ng-model'])) {
+                $options['hiddenCsrf']['data']['ng-model'] = (isset($this->modelName) ? $this->modelName : 'form') . ".values.{$this->csrf->csrfParam}";
+            }
+            if (!isset($options['hiddenCsrf']['data']['ng-value'])) {
+                $options['hiddenCsrf']['data']['ng-value'] = 'rock.csrf.getToken()';
+            }
+        }
+
+        if ($this->clientAction) {
+            $options['data']['ng-submit'] = "submit('{$this->clientAction}', \$event)";
+        }
+        return $options;
     }
 }

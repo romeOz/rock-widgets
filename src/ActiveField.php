@@ -9,8 +9,8 @@ use rock\cache\CacheInterface;
 use rock\components\Model;
 use rock\di\Container;
 use rock\helpers\Json;
+use rock\i18n\i18n;
 use rock\log\Log;
-use rock\template\Html;
 
 class ActiveField implements ObjectInterface
 {
@@ -200,7 +200,6 @@ class ActiveField implements ObjectInterface
     public function render($content = null)
     {
         if ($content === null) {
-
             $content = $this->_calculateParts();
         } elseif (!is_string($content)) {
             $content = call_user_func($content, $this);
@@ -209,113 +208,49 @@ class ActiveField implements ObjectInterface
         return $this->begin() . "\n" . $content . "\n" . $this->end();
     }
 
-    private function _calculateParts()
-    {
-        if (isset($this->parts['{input}']) && $this->parts['{input}'] === '') {
-            return '';
-        }
-        if (!isset($this->parts['{input}'])) {
-            $this->inputOptions = $this->calculateClientInputOption($this->inputOptions);
-            $this->parts['{input}'] =
-                ActiveHtml::activeTextInput($this->model, $this->attribute, $this->inputOptions);
-        }
-        if (!isset($this->parts['{label}'])) {
-            $this->parts['{label}'] = ActiveHtml::activeLabel($this->model, $this->attribute, $this->labelOptions);
-        }
-        if (!isset($this->parts['{error}'])) {
-            $this->parts['{error}'] = $this->renderErrors();
-        }
-        if (!isset($this->parts['{hint}'])) {
-            $this->parts['{hint}'] = ActiveHtml::activeHint($this->model, $this->attribute, $this->hintOptions);
-        }
-        return strtr($this->template, $this->parts);
-    }
-
     public function calculateClientInputOption($options = [])
     {
         $formName = $this->formName;
-        if (!isset($options['data-ng-model'])) {
-            $options['data-ng-model'] = isset($formName)
+        if (!isset($options['data']['ng-model'])) {
+            $options['data']['ng-model'] = isset($formName)
                 ? "{$formName}.values.{$this->attribute}"
                 : "form.values.{$this->attribute}";
         }
-        if ($this->enableClientValidation && !isset($options['data-ng-class'])) {
-            $options['data-ng-class'] = isset($formName)
+        if ($this->enableClientValidation && !isset($options['data']['ng-class'])) {
+            $options['data']['ng-class'] = isset($formName)
                 ? 'showHighlightError("' . $formName . '[' . $this->attribute . ']")'
                 : 'showHighlightError("' . $this->attribute . '")';
         }
         if ($this->enableClientValidation && $this->validateOnChanged) {
-            $options['data-rock-form-focus'] = '';
+            $options['data']['rock-form-focus'] = '';
         }
-        if (isset($options['value']) && empty($options['value']) && !isset($options['data-rock-reset-field'])) {
-            $options['data-rock-reset-field'] = '';
+        if (isset($options['value']) && empty($options['value']) && !isset($options['data']['rock-reset-field'])) {
+            $options['data']['rock-reset-field'] = '';
         }
         return $this->calculateValidateOptions($options);
-    }
-
-    protected function calculateValidateOptions(array $options)
-    {
-        if (!$this->enableClientValidation) {
-            return $options;
-        }
-        foreach ($this->model->rules() as $rule) {
-            list($attributes) = $rule;
-            if (in_array($this->attribute, (array)$attributes, true)) {
-                $rule = array_slice($rule, 1);
-
-                foreach ($rule as $ruleName => $args) {
-                    if (is_int($ruleName)) {
-                        $ruleName = $args;
-                        $args = [];
-                    }
-                    if ($ruleName === 'length' && !isset($options['data-ng-minlength']) && !isset($options['data-ng-maxlength'])) {
-                        $options['data-ng-minlength'] = $args[0];
-                        $options['data-ng-maxlength'] = $args[1];
-                        continue;
-                    }
-                    if ($ruleName === 'max' && !isset($options['data-ng-maxlength'])) {
-                        $options['data-ng-maxlength'] = $args[0];
-                        continue;
-                    }
-                    if ($ruleName === 'min' && !isset($options['data-ng-minlength'])) {
-                        $options['data-ng-minlength'] = $args[0];
-                        continue;
-                    }
-                    if ($ruleName === 'email' && !isset($options['data-ng-pattern'])) {
-                        $options['data-ng-pattern'] = '/^([\\wА-яё]+[\\wА-яё\\.\\+\\-]+)?[\\wА-яё]+@([\\wА-яё]+\\.)+[\\wА-яё]+$/i';
-                        continue;
-                    }
-                    if ($ruleName === 'regex' && !isset($options['data-ng-pattern'])) {
-                        $options['data-ng-pattern'] = $args[0];
-                        continue;
-                    }
-                    if ($ruleName === 'required' && !isset($options['data-ng-required'])) {
-                        $options['data-ng-required'] = 'true';
-                    }
-                }
-            }
-        }
-        return $options;
     }
 
     protected function renderErrors()
     {
         $result = '';
-        $tag = isset($this->ngErrorOptions['tag']) ? $this->ngErrorOptions['tag'] : 'div';
-        unset($this->ngErrorOptions['tag']);
-        $formName = isset($this->formName) ? $this->formName . '[' . $this->attribute . ']' : $this->attribute;
-        if ($this->ngErrorMessages) {
-            if (is_array($this->ngErrorMessages)) {
-                $this->ngErrorMessages = Json::encode($this->ngErrorMessages);
-            }
-            $this->ngErrorOptions['data-ng-repeat'] = '(error, errorMsg) in ' . $this->ngErrorMessages;
-            $this->ngErrorOptions['data-ng-show'] = 'showError("' . $formName . '", error)';
-            $this->ngErrorOptions['data-ng-bind'] = 'errorMsg';
-            $result .= Html::tag($tag, '', $this->ngErrorOptions) . "\n";
-        }
+        if ($this->enableClientValidation) {
+            $tag = isset($this->ngErrorOptions['tag']) ? $this->ngErrorOptions['tag'] : 'div';
+            unset($this->ngErrorOptions['tag']);
+            $formName = isset($this->formName) ? $this->formName . '[' . $this->attribute . ']' : $this->attribute;
 
-        $result .= Html::tag($tag, '', ['class' => $this->ngErrorOptions['class'], 'data-ng-show' => "!!bindError(\"{$this->attribute}\") && pristine(\"{$formName}\")", 'data-ng-bind' => "bindError(\"{$this->attribute}\")"]) . "\n";
-        $this->errorOptions['data-ng-show'] = 'hideError("' . $formName . '", error)';
+            if ($this->ngErrorMessages) {
+                if (is_array($this->ngErrorMessages)) {
+                    $this->ngErrorMessages = Json::encode($this->ngErrorMessages);
+                }
+
+                $this->ngErrorOptions['data']['ng-repeat'] = "(rule, errorMsg) in {$this->ngErrorMessages}";
+                $this->ngErrorOptions['data']['ng-show'] = 'showError("' . $formName . '", rule)';
+                $this->ngErrorOptions['data']['ng-bind'] = "errorMsg";
+                $result .= ActiveHtml::tag($tag, '', $this->ngErrorOptions) . "\n";
+            }
+            $result .= ActiveHtml::tag($tag, '', ['class' => $this->ngErrorOptions['class'], 'data' => ['ng-show' => "!!bindError(\"{$this->attribute}\")", 'ng-bind' => "bindError(\"{$this->attribute}\")"]]) . "\n";
+            $this->errorOptions['data']['ng-hide'] = 'true';
+        }
         $result .= ActiveHtml::error($this->model, $this->attribute, $this->errorOptions);
 
         return $result;
@@ -340,9 +275,9 @@ class ActiveField implements ObjectInterface
             $class[] = $this->form->errorCssClass;
         }
         $options['class'] = implode(' ', $class);
-        $tag = Html::remove($options, 'tag', 'div');
+        $tag = ActiveHtml::remove($options, 'tag', 'div');
 
-        return Html::beginTag($tag, $options);
+        return ActiveHtml::beginTag($tag, $options);
     }
 
     /**
@@ -352,16 +287,16 @@ class ActiveField implements ObjectInterface
      */
     public function end()
     {
-        return Html::endTag(isset($this->options['tag']) ? $this->options['tag'] : 'div');
+        return ActiveHtml::endTag(isset($this->options['tag']) ? $this->options['tag'] : 'div');
     }
 
     /**
      * Generates a label tag for {@see \rock\widgets\ActiveField::$attribute}.
      *
-     * @param string|boolean $label   the label to use. If null, the label will be generated
+     * @param string|boolean $label the label to use. If null, the label will be generated
      *                                via {@see \rock\components\Model::getAttributeLabel()}.
      *                                If false, the generated field will not contain the label part. Note that this will NOT be {@see \rock\template\Html::encode()}.
-     * @param array          $options the tag options in terms of name-value pairs. It will be merged
+     * @param array $options the tag options in terms of name-value pairs. It will be merged
      *                                with {@see \rock\widgets\ActiveField::$labelOptions}.
      *                                The options will be rendered as the attributes of the resulting tag. The values will be HTML-encoded
      *                                using {@see \rock\template\Html::encode()}. If a value is null, the corresponding attribute will not be rendered.
@@ -418,7 +353,7 @@ class ActiveField implements ObjectInterface
      * Renders the hint tag.
      *
      * @param string $content the hint content. It will NOT be HTML-encoded.
-     * @param array  $options the tag options in terms of name-value pairs. These will be rendered as
+     * @param array $options the tag options in terms of name-value pairs. These will be rendered as
      *                        the attributes of the hint tag. The values will be HTML-encoded using {@see \rock\template\Html::encode()}.
      *
      * The following options are specially handled:
@@ -430,8 +365,8 @@ class ActiveField implements ObjectInterface
     public function hint($content, $options = [])
     {
         $options = array_merge($this->hintOptions, $options);
-        $tag = Html::remove($options, 'tag', 'div');
-        $this->parts['{hint}'] = Html::tag($tag, $content, $options);
+        $tag = ActiveHtml::remove($options, 'tag', 'div');
+        $this->parts['{hint}'] = ActiveHtml::tag($tag, $content, $options);
 
         return $this;
     }
@@ -439,8 +374,8 @@ class ActiveField implements ObjectInterface
     /**
      * Renders an input tag.
      *
-     * @param string $type    the input type (e.g. 'text', 'password')
-     * @param array  $options the tag options in terms of name-value pairs. These will be rendered as
+     * @param string $type the input type (e.g. 'text', 'password')
+     * @param array $options the tag options in terms of name-value pairs. These will be rendered as
      *                        the attributes of the resulting tag. The values will be HTML-encoded using {@see \rock\template\Html::encode()}.
      * @return static the field object itself
      */
@@ -504,10 +439,15 @@ class ActiveField implements ObjectInterface
     {
         $options = array_merge($this->inputOptions, $options);
         $options = $this->calculateClientInputOption($options);
-        if (!isset($options['data-ng-init']) && isset($options['value']) && trim($options['value']) !== '') {
-            $options['data-ng-init'] = isset($this->formName)
-                ? "{$this->formName}.values.{$this->attribute}={$options['value']}"
-                : "form.values.{$this->attribute}={$options['value']}";
+        if (!isset($options['data']['ng-init']) && isset($options['value']) && trim($options['value']) !== '') {
+            if (!isset($options['data']['ng-init'])) {
+                $options['data']['ng-init'] = [];
+            }
+            $key = isset($this->formName) ? "{$this->formName}.values.{$this->attribute}" : "form.values.{$this->attribute}";
+
+            if (!isset($options['data']['ng-init'][$key])) {
+                $options['data']['ng-init'][$key] = $options['value'];
+            }
         }
         $this->adjustLabelFor($options);
         $this->parts['{input}'] = ActiveHtml::activeHiddenInput($this->model, $this->attribute, $options);
@@ -581,7 +521,7 @@ class ActiveField implements ObjectInterface
      *
      * This method will generate the "checked" tag attribute according to the model attribute value.
      *
-     * @param array   $options         the tag options in terms of name-value pairs. The following options are specially handled:
+     * @param array $options the tag options in terms of name-value pairs. The following options are specially handled:
      *
      * - uncheck: string, the value associated with the uncheck state of the radio button. If not set,
      *   it will take the default value '0'. This method will render a hidden input so that if the radio button
@@ -625,7 +565,7 @@ class ActiveField implements ObjectInterface
      *
      * This method will generate the "checked" tag attribute according to the model attribute value.
      *
-     * @param array   $options         the tag options in terms of name-value pairs. The following options are specially handled:
+     * @param array $options the tag options in terms of name-value pairs. The following options are specially handled:
      *
      * - uncheck: string, the value associated with the uncheck state of the radio button. If not set,
      *   it will take the default value '0'. This method will render a hidden input so that if the radio button
@@ -669,14 +609,14 @@ class ActiveField implements ObjectInterface
      * Renders a drop-down list.
      * The selection of the drop-down list is taken from the value of the model attribute.
      *
-     * @param array|callable $items   the option data items. The array keys are option values, and the array values
+     * @param array|callable $items the option data items. The array keys are option values, and the array values
      *                                are the corresponding option labels. The array can also be nested (i.e. some array values are arrays too).
      *                                For each sub-array, an option group will be generated whose label is the key associated with the sub-array.
      *                                If you have a list of data models, you may convert them into the format described above using {@see \rock\helpers\ArrayHelper::map()}.
      *
      * Note, the values and labels will be automatically HTML-encoded by this method, and the blank spaces in
      * the labels will also be HTML-encoded.
-     * @param array          $options the tag options in terms of name-value pairs. The following options are specially handled:
+     * @param array $options the tag options in terms of name-value pairs. The following options are specially handled:
      *
      * - prompt: string, a prompt text to be displayed as the first option;
      * - options: array, the attributes for the select option tags. The array keys must be valid option values,
@@ -722,7 +662,7 @@ class ActiveField implements ObjectInterface
      *
      * The selection of the list box is taken from the value of the model attribute.
      *
-     * @param array $items   the option data items. The array keys are option values, and the array values
+     * @param array $items the option data items. The array keys are option values, and the array values
      *                       are the corresponding option labels. The array can also be nested (i.e. some array values are arrays too).
      *                       For each sub-array, an option group will be generated whose label is the key associated with the sub-array.
      *                       If you have a list of data models, you may convert them into the format described above using {@see \rock\helpers\ArrayHelper::map()} .
@@ -777,10 +717,10 @@ class ActiveField implements ObjectInterface
      * As a result, the corresponding submitted value is an array.
      * The selection of the checkbox list is taken from the value of the model attribute.
      *
-     * @param array|callable $items   the data item used to generate the checkboxes.
+     * @param array|callable $items the data item used to generate the checkboxes.
      *                                The array values are the labels, while the array keys are the corresponding checkbox values.
      *                                Note that the labels will NOT be HTML-encoded, while the values will.
-     * @param array          $options options (name => config) for the checkbox list. The following options are specially handled:
+     * @param array $options options (name => config) for the checkbox list. The following options are specially handled:
      *
      * - unselect: string, the value that should be submitted when none of the checkboxes is selected.
      *   By setting this option, a hidden input will be generated.
@@ -818,10 +758,10 @@ class ActiveField implements ObjectInterface
      * A radio button list is like a checkbox list, except that it only allows single selection.
      * The selection of the radio buttons is taken from the value of the model attribute.
      *
-     * @param array|callable $items   the data item used to generate the radio buttons.
+     * @param array|callable $items the data item used to generate the radio buttons.
      *                                The array keys are the labels, while the array values are the corresponding radio button values.
      *                                Note that the labels will NOT be HTML-encoded, while the values will.
-     * @param array          $options options (name => config) for the radio button list. The following options are specially handled:
+     * @param array $options options (name => config) for the radio button list. The following options are specially handled:
      *
      * - unselect: string, the value that should be submitted when none of the radio buttons is selected.
      *   By setting this option, a hidden input will be generated.
@@ -848,8 +788,8 @@ class ActiveField implements ObjectInterface
             $items = call_user_func($items, $this);
         }
         $this->adjustLabelFor($options);
-        if (!isset($options['itemOptions']['data-ng-model'])) {
-            $options['itemOptions']['data-ng-model'] = "{$this->formName}.values.{$this->attribute}";
+        if (!isset($options['itemOptions']['data']['ng-model'])) {
+            $options['itemOptions']['data']['ng-model'] = "{$this->formName}.values.{$this->attribute}";
         }
         $this->parts['{input}'] = ActiveHtml::activeRadioList($this->model, $this->attribute, $items, $options);
         $this->setCache(__METHOD__, $this->parts['{input}']);
@@ -875,8 +815,8 @@ class ActiveField implements ObjectInterface
      * ]);
      * ```
      *
-     * @param string $class  the widget class name
-     * @param array  $config name-value pairs that will be used to initialize the widget
+     * @param string $class the widget class name
+     * @param array $config name-value pairs that will be used to initialize the widget
      * @return static the field object itself
      */
     public function widget($class, $config = [])
@@ -963,5 +903,162 @@ class ActiveField implements ObjectInterface
         $model = $this->model;
 
         return $model::className() . $this->attribute . $method;
+    }
+
+    protected function calculateValidateOptions(array $options)
+    {
+        if (!$this->enableClientValidation) {
+            return $options;
+        }
+        foreach ($this->model->rules() as $rule) {
+            list($attributes) = $rule;
+            if (in_array($this->attribute, (array)$attributes, true)) {
+                $rule = array_slice($rule, 1);
+
+                foreach ($rule as $ruleName => $params) {
+                    if (is_int($ruleName)) {
+                        $ruleName = $params;
+                        $params = [];
+                    }
+                    if ($ruleName === 'length') {
+                        $options = $this->calculateLength($options, $params[0], $params[1]);
+                        continue;
+                    }
+                    if ($ruleName === 'max') {
+                        $options = $this->calculateMax($options, $params[0]);
+                        continue;
+                    }
+                    if ($ruleName === 'min') {
+                        $options = $this->calculateMin($options, $params[0]);
+                        continue;
+                    }
+                    if ($ruleName === 'email') {
+                        $options = $this->calculateEmail($options);
+                        continue;
+                    }
+                    if ($ruleName === 'regex') {
+                        $options = $this->calculateRegex($options, $params[0]);
+                        continue;
+                    }
+                    if ($ruleName === 'required') {
+                        $options = $this->calculateRequired($options);
+                        continue;
+                    }
+
+                    if ($ruleName === 'confirm' && isset($options['data']['rock-match'])) {
+                        $options = $this->calculateConfirm($options);
+                    }
+                }
+            }
+        }
+        return $options;
+    }
+
+    protected function calculateLength(array $options, $min, $max)
+    {
+        $options = $this->calculateMin($options, $min);
+        $options = $this->calculateMax($options, $max);
+        return $options;
+    }
+
+    protected function calculateMin(array $options, $min)
+    {
+        if (!isset($options['data']['ng-minlength'])) {
+            $options['data']['ng-minlength'] = $min;
+        }
+        if (!isset($this->ngErrorMessages['minlength']) && class_exists('\rock\i18n\i18n')) {
+            $placeholders = [
+                'name' => $this->model->getAttributeLabel($this->attribute) ?: i18n::t('value'),
+                'minValue' => $options['data']['ng-minlength']
+            ];
+            $this->ngErrorMessages['minlength'] = i18n::t('min', $placeholders, 'validate') . ' ' . i18n::t('characters');
+        }
+        return $options;
+    }
+
+    protected function calculateMax(array $options, $max)
+    {
+        if (!isset($options['data']['ng-maxlength'])) {
+            $options['data']['ng-maxlength'] = $max;
+        }
+        if (!isset($this->ngErrorMessages['maxlength']) && class_exists('\rock\i18n\i18n')) {
+            $placeholders = [
+                'name' => $this->model->getAttributeLabel($this->attribute) ?: i18n::t('value'),
+                'maxValue' => $options['data']['ng-maxlength']
+            ];
+            $this->ngErrorMessages['maxlength'] = i18n::t('max', $placeholders, 'validate') . ' ' . i18n::t('characters');
+        }
+        return $options;
+    }
+
+    protected function calculateEmail(array $options)
+    {
+        if (!isset($options['data']['ng-pattern'])) {
+            $options['data']['ng-pattern'] = '/^([\\wА-яё]+[\\wА-яё\\.\\+\\-]+)?[\\wА-яё]+@([\\wА-яё]+\\.)+[\\wА-яё]+$/i';
+        }
+        if (!isset($this->ngErrorMessages['pattern']) && class_exists('\rock\i18n\i18n')) {
+            $this->ngErrorMessages['pattern'] = i18n::t('email', ['name' => 'email'], 'validate');
+        }
+        return $options;
+    }
+
+    protected function calculateRegex(array $options, $pattern)
+    {
+        if (!isset($options['data']['ng-pattern'])) {
+            $options['data']['ng-pattern'] = $pattern;
+        }
+        if (!isset($this->ngErrorMessages['pattern']) && class_exists('\rock\i18n\i18n')) {
+            $placeholders = ['name' => $this->model->getAttributeLabel($this->attribute) ?: i18n::t('value')];
+            $this->ngErrorMessages['pattern'] = i18n::t('regex', $placeholders, 'validate');
+        }
+        return $options;
+    }
+
+    protected function calculateRequired(array $options)
+    {
+        if (!isset($options['data']['ng-required'])) {
+            $options['data']['ng-required'] = 'true';
+        }
+        if (!isset($this->ngErrorMessages['required']) && class_exists('\rock\i18n\i18n')) {
+            $this->ngErrorMessages['required'] = i18n::t('required', ['name' => i18n::t('value')], 'validate');
+        }
+        return $options;
+    }
+
+    /**
+     * @param array $options
+     * @return array
+     */
+    protected function calculateConfirm(array $options)
+    {
+        $options['data']['rock-match'] = isset($this->formName)
+            ? "{$this->formName}.values.{$options['data']['rock-match']}"
+            : "form.values.{$options['data']['rock-match']}";
+        if (!isset($this->ngErrorMessages['match']) && class_exists('\rock\i18n\i18n')) {
+            $this->ngErrorMessages['match'] = i18n::t('confirm', [], 'validate');
+        }
+        return $options;
+    }
+
+    private function _calculateParts()
+    {
+        if (isset($this->parts['{input}']) && $this->parts['{input}'] === '') {
+            return '';
+        }
+        if (!isset($this->parts['{input}'])) {
+            $this->inputOptions = $this->calculateClientInputOption($this->inputOptions);
+            $this->parts['{input}'] =
+                ActiveHtml::activeTextInput($this->model, $this->attribute, $this->inputOptions);
+        }
+        if (!isset($this->parts['{label}'])) {
+            $this->parts['{label}'] = ActiveHtml::activeLabel($this->model, $this->attribute, $this->labelOptions);
+        }
+        if (!isset($this->parts['{error}'])) {
+            $this->parts['{error}'] = $this->renderErrors();
+        }
+        if (!isset($this->parts['{hint}'])) {
+            $this->parts['{hint}'] = ActiveHtml::activeHint($this->model, $this->attribute, $this->hintOptions);
+        }
+        return strtr($this->template, $this->parts);
     }
 }
