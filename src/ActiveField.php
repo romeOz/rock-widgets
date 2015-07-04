@@ -8,6 +8,7 @@ use rock\base\ObjectTrait;
 use rock\cache\CacheInterface;
 use rock\components\Model;
 use rock\di\Container;
+use rock\helpers\Instance;
 use rock\helpers\Json;
 use rock\i18n\i18n;
 use rock\log\Log;
@@ -153,11 +154,7 @@ class ActiveField implements ObjectInterface
             $this->formName = $formName;
         }
 
-        if (!is_object($this->cache)) {
-            if (class_exists('\rock\di\Container')) {
-                $this->cache = \rock\di\Container::load($this->cache);
-            }
-        }
+        $this->cache = Instance::ensure($this->cache, '\rock\cache\CacheFile', false);
     }
 
     /**
