@@ -331,7 +331,7 @@ class ActiveForm extends Widget
                 $options['hiddenCsrf']['data']['ng-model'] = (isset($this->modelName) ? $this->modelName : 'form') . ".values.{$this->csrf->csrfParam}";
             }
             if (!isset($options['hiddenCsrf']['data']['ng-value'])) {
-                $options['hiddenCsrf']['data']['ng-value'] = 'rock.csrf.getToken()';
+                $options['hiddenCsrf']['data']['ng-value'] = "rock.csrf.getToken() || '" . $this->csrf->get() . "'";
             }
         }
 
