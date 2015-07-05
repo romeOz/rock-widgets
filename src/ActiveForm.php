@@ -331,13 +331,12 @@ class ActiveForm extends Widget
                 $options['hiddenCsrf']['data']['ng-model'] = (isset($this->modelName) ? $this->modelName : 'form') . ".values.{$this->csrf->csrfParam}";
             }
             if (!isset($options['hiddenCsrf']['data']['ng-value'])) {
-                $options['hiddenCsrf']['data']['ng-value'] = "rock.csrf.getToken() || '" . $this->csrf->get() . "'";
+                $options['hiddenCsrf']['data']['ng-value'] = "rock.csrf.getToken() || '".$this->csrf->get()."'";
             }
         }
 
-        if ($this->clientAction) {
-            $options['data']['ng-submit'] = "submit('{$this->clientAction}', \$event)";
-        }
+        $options['data']['ng-submit'] = "submit('{$this->clientAction}', \$event)";
+
         return $options;
     }
 }
