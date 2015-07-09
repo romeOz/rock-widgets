@@ -68,8 +68,7 @@ class Captcha extends InputWidget implements CaptchaInterface
         if ($this->output === self::BASE64) {
             $src = $this->captcha->getDataUri();
         } else {
-            $urlBuilder = Url::set($this->captchaAction);
-            $src = $urlBuilder->addArgs(['v' => uniqid()])->getAbsoluteUrl(true);
+            $src = Url::modify([$this->captchaAction, 'v' => uniqid()], Url::ABS);
         }
 
         $image = Html::img(
