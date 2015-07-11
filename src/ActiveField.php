@@ -154,7 +154,7 @@ class ActiveField implements ObjectInterface
             $this->formName = $formName;
         }
 
-        $this->cache = Instance::ensure($this->cache, '\rock\cache\CacheFile', false);
+        $this->cache = Instance::ensure($this->cache, '\rock\cache\CacheFile', [], false);
     }
 
     /**

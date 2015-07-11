@@ -109,7 +109,7 @@ class ActiveForm extends Widget
      */
     public function init()
     {
-        $this->csrf = Instance::ensure($this->csrf, '\rock\csrf\CSRF', false);
+        $this->csrf = Instance::ensure($this->csrf, '\rock\csrf\CSRF', [], false);
         $this->request = Instance::ensure($this->request, '\rock\request\Request');
         if (!empty($this->clientAction)) {
             $this->clientAction = Alias::getAlias($this->clientAction);
