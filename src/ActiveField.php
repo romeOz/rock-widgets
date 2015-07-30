@@ -7,7 +7,6 @@ use rock\base\ObjectInterface;
 use rock\base\ObjectTrait;
 use rock\cache\CacheInterface;
 use rock\components\Model;
-use rock\di\Container;
 use rock\helpers\Instance;
 use rock\helpers\Json;
 use rock\i18n\i18n;
@@ -144,7 +143,7 @@ class ActiveField implements ObjectInterface
      * Defaults to null, meaning no dependency.
      * @see enableCache
      */
-    public $cacheTags;
+    public $cacheTags = [];
     /** @var string */
     protected $formName = 'form';
 
@@ -833,13 +832,13 @@ class ActiveField implements ObjectInterface
      * This method is provided as a shortcut to setting two properties that are related
      * with query caching: `cacheExpire` and `cacheTags`.
      *
-     * @param int|null $expire
+     * @param int $expire
      * @param string[] $tags the tags for the cached query result.
      *                       See `cacheTags` for more details.
      *                       If not set, it will use the value of `cacheExpire`. See `cacheExpire` for more details.
      * @return $this
      */
-    public function cache($expire = null, array $tags = null)
+    public function cache($expire = 0, array $tags = [])
     {
         $this->enableCache = true;
         if ($expire !== null) {
@@ -868,7 +867,7 @@ class ActiveField implements ObjectInterface
      */
     protected function getCache($key = null)
     {
-        if (!$this->cache instanceof \rock\cache\CacheInterface || !isset($key)) {
+        if (!$this->enableCache || !$this->cache instanceof \rock\cache\CacheInterface || !isset($key)) {
             return false;
         }
         $key = $this->getCacheKey($key);
@@ -888,11 +887,11 @@ class ActiveField implements ObjectInterface
      */
     protected function setCache($key = null, $value = null)
     {
-        if (!$this->cache instanceof \rock\cache\CacheInterface || !isset($key)) {
+        if (!$this->enableCache || !$this->cache instanceof \rock\cache\CacheInterface || !isset($key)) {
             return;
         }
         $key = $this->getCacheKey($key);
-        $this->cache->set($key, $value);
+        $this->cache->set($key, $value, $this->cacheExpire, $this->cacheTags);
     }
 
     protected function getCacheKey($method)
