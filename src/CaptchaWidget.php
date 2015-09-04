@@ -9,7 +9,7 @@ use rock\helpers\Instance;
 use rock\template\Html;
 use rock\url\Url;
 
-class Captcha extends InputWidget implements CaptchaInterface
+class CaptchaWidget extends InputWidget implements CaptchaInterface
 {
     /**
      * @var string the route of the action that generates the CAPTCHA images.
