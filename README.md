@@ -1,4 +1,4 @@
-Widgets module for [Rock Template](https://github.com/romeOz/rock-template)
+Widgets for [Rock Template](https://github.com/romeOz/rock-template)
 =================
 
 [![Build Status](https://travis-ci.org/romeOz/rock-widgets.svg?branch=master)](https://travis-ci.org/romeOz/rock-widgets)
@@ -13,4 +13,4 @@ Requirements
 License
 -------------------
 
-Widgets module for [Rock Template](https://github.com/romeOz/rock-template) is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT).
+Widgets for [Rock Template](https://github.com/romeOz/rock-template) is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT).
