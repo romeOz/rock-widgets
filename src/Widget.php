@@ -5,11 +5,15 @@ namespace rock\widgets;
 
 use rock\components\ComponentsInterface;
 use rock\components\ComponentsTrait;
-use rock\di\Container;
+use rock\helpers\Instance;
+use rock\snippets\Snippet;
 
 class Widget implements ComponentsInterface
 {
     use ComponentsTrait;
+
+    const EVENT_BEFORE_WIDGET = Snippet::EVENT_BEFORE_SNIPPET;
+    const EVENT_AFTER_WIDGET = Snippet::EVENT_AFTER_SNIPPET;
 
     /**
      * @var integer a counter used to generate `id` for widgets.
@@ -36,11 +40,11 @@ class Widget implements ComponentsInterface
      * @param array $config name-value pairs that will be used to initialize the object properties
      * @return static the newly created widget instance
      */
-    public static function begin($config = [])
+    public static function begin(array $config = [])
     {
         $config['class'] = get_called_class();
         /** @var Widget $widget */
-        $widget = Container::load($config);
+        $widget = Instance::ensure($config);
 
         self::$stack[] = $widget;
 
@@ -57,9 +61,13 @@ class Widget implements ComponentsInterface
     public static function end()
     {
         if (!empty(self::$stack)) {
+            /** @var static $widget */
             $widget = array_pop(self::$stack);
             if (get_class($widget) === get_called_class()) {
-                $widget->run();
+                if ($widget->beforeWidget()) {
+                    $widget->run();
+                    $widget->afterWidget(null);
+                }
 
                 return $widget;
             } else {
@@ -76,16 +84,21 @@ class Widget implements ComponentsInterface
      * @param array $config name-value pairs that will be used to initialize the object properties
      * @return string the rendering result of the widget.
      */
-    public static function widget($config = [])
+    public static function widget(array $config = [])
     {
         ob_start();
         ob_implicit_flush(false);
         /** @var Widget $widget */
         $config['class'] = get_called_class();
-        $widget = Container::load($config);
-        $out = $widget->run();
+        $widget = Instance::ensure($config);
+        $out = '';
+        if ($widget->beforeWidget()) {
+            $out = $widget->run();
+            $widget->afterWidget(null);
+        }
+        $out =  ob_get_clean() . $out;
 
-        return ob_get_clean() . $out;
+        return $out;
     }
 
     private $_id;
@@ -119,5 +132,62 @@ class Widget implements ComponentsInterface
      */
     public function run()
     {
+    }
+
+    /**
+     * This method is invoked right before an action is executed.
+     *
+     * The method will trigger the {@see \rock\widgets\Widget::EVENT_BEFORE_WIDGET} event. The return value of the method
+     * will determine whether the action should continue to run.
+     *
+     * If you override this method, your code should look like the following:
+     *
+     * ```php
+     * public function beforeWidget()
+     * {
+     *     if (parent::beforeWidget()) {
+     *         // your custom code here
+     *         return true;  // or false if needed
+     *     } else {
+     *         return false;
+     *     }
+     * }
+     * ```
+     *
+     * @return boolean whether the action should continue to run.
+     */
+    public function beforeWidget()
+    {
+        $event = new WidgetEvent();
+        $this->trigger(self::EVENT_BEFORE_WIDGET, $event);
+        return $event->isValid;
+    }
+
+    /**
+     * This method is invoked right after an action is executed.
+     *
+     * The method will trigger the {@see \rock\widgets\Widget::EVENT_AFTER_WIDGET} event. The return value of the method
+     * will be used as the action return value.
+     *
+     * If you override this method, your code should look like the following:
+     *
+     * ```php
+     * public function afterWidget($result)
+     * {
+     *     $result = parent::afterWidget($result);
+     *     // your custom code here
+     *     return $result;
+     * }
+     * ```
+     *
+     * @param mixed $result the action return result.
+     * @return mixed the processed action result.
+     */
+    public function afterWidget($result)
+    {
+        $event = new WidgetEvent();
+        $event->result = $result;
+        $this->trigger(self::EVENT_AFTER_WIDGET, $event);
+        return $event->result;
     }
 } 
